@@ -5,14 +5,21 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.0.3",
+    "axios": "^1.6.2",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
-    "grammy": "^1.14.1"
+    "grammy": "^1.14.1",
+    "jsdom": "^22.1.0",
+    "node-telegram-bot-api": "^0.64.0",
+    "nodemon": "^3.0.1",
+    "openai": "^4.19.0"
   }
 }

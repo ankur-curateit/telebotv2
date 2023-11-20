@@ -1,25 +1,56 @@
-const { Bot, webhookCallback } = require("grammy");
 const express = require("express");
-
+const bodyParser = require("body-parser");
+const TelegramBot = require("node-telegram-bot-api");
 require("dotenv").config();
 
-const bot = new Bot(process.env.BOT_TOKEN);
+// Bot Token from BotFather
+const TOKEN = process.env.BOT_TOKEN;
+// Your webhook URL (must be HTTPS)
+const url = process.env.WEBHOOK_URL;
+// Port number for the Express server
+const port = process.env.PORT || 3000;
+// Webhook route (can be any secret path)
+const path = "/telegram-bot-webhook";
 
-bot.command("start", (ctx) => ctx.reply("Welcome! Up and running."));
-bot.on("message", (ctx) => ctx.reply(`Got a Message <==> ${ctx.message.text}`));
+const bot = new TelegramBot(TOKEN);
 
-if (process.env.NODE_ENV === "production") {
-  const app = express();
-  app.use(express.json());
-  app.use(webhookCallback(bot, "express"));
+// Setting up the webhook
+bot.setWebHook(`${url}/bot${TOKEN}`);
 
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Bot listening on port ${PORT}`);
-  });
-} else {
-  bot.start();
-}
+// Creating an Express application
+const app = express();
 
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+// Use body-parser middleware to parse incoming JSON requests
+app.use(bodyParser.json());
+
+// We are receiving updates at the route below!
+app.post(`/bot${TOKEN}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
+// Define command and message handlers
+bot.on("message", (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, `Got a Message <==> ${msg.text}`);
+});
+
+bot.onText(/\/start/, (msg) => {
+  bot.sendMessage(msg.chat.id, "Welcome! Up and running.");
+});
+
+// Start the Express server
+app.listen(port, () => {
+  console.log(`Express server is listening on port ${port}`);
+});
+
+// Graceful shutdown
+process.once("SIGINT", () => {
+  bot.closeWebHook();
+  process.exit(0);
+});
+
+process.once("SIGTERM", () => {
+  bot.closeWebHook();
+  process.exit(0);
+});
